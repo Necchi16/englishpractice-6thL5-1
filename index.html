@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>えいごで いってみよう！</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+    @keyframes bounceIn {
+      0% { transform: scale(0.1); opacity: 0; }
+      60% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-bounce-in {
+      animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+    .animate-shake {
+      animation: shake 0.3s ease-in-out;
+    }
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body class="bg-blue-50 font-sans touch-manipulation">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+    const MONSTERS = [
+      { id: 1, name: "勇気のライオン", emoji: "🦁", color: "bg-orange-200" },
+      { id: 2, name: "笑顔のドラゴン", emoji: "🐉", color: "bg-green-200" },
+      { id: 3, name: "星の妖精", emoji: "🧚", color: "bg-yellow-200" },
+      { id: 4, name: "幸運のユニコーン", emoji: "🦄", color: "bg-pink-200" },
+      { id: 5, name: "知恵のフクロウ", emoji: "🦉", color: "bg-blue-200" },
+      { id: 6, name: "元気なウサギ", emoji: "🐰", color: "bg-red-200" },
+      { id: 7, name: "仲良しキツネ", emoji: "🦊", color: "bg-orange-300" },
+      { id: 8, name: "のんびりパンダ", emoji: "🐼", color: "bg-gray-200" },
+      { id: 9, name: "優しいコアラ", emoji: "🐨", color: "bg-gray-300" },
+      { id: 10, name: "希望のトラ", emoji: "🐯", color: "bg-yellow-300" },
+      { id: 11, name: "歌うカエル", emoji: "🐸", color: "bg-green-300" },
+      { id: 12, name: "踊るペンギン", emoji: "🐧", color: "bg-blue-300" },
+      { id: 13, name: "夢見るイルカ", emoji: "🐬", color: "bg-cyan-200" },
+      { id: 14, name: "長寿のカメ", emoji: "🐢", color: "bg-green-400" },
+      { id: 15, name: "幸せのテントウムシ", emoji: "🐞", color: "bg-red-300" },
+      { id: 16, name: "輝くチョウ", emoji: "🦋", color: "bg-blue-400" },
+      { id: 17, name: "ピヨピヨひよこ", emoji: "🐥", color: "bg-yellow-400" },
+      { id: 18, name: "力強いT-レックス", emoji: "🦖", color: "bg-green-500" },
+      { id: 19, name: "穏やかなブラキオサウルス", emoji: "🦕", color: "bg-blue-500" },
+      { id: 20, name: "華麗なクジャク", emoji: "🦚", color: "bg-emerald-300" },
+      { id: 21, name: "おしゃべりオウム", emoji: "🦜", color: "bg-red-400" },
+      { id: 22, name: "優雅なハクチョウ", emoji: "🦢", color: "bg-gray-100" },
+      { id: 23, name: "情熱のフラミンゴ", emoji: "🦩", color: "bg-pink-300" },
+      { id: 24, name: "まじめなハリネズミ", emoji: "🦔", color: "bg-amber-200" },
+      { id: 25, name: "遊び好きなラッコ", emoji: "🦦", color: "bg-orange-100" },
+      { id: 26, name: "準備万端リス", emoji: "🐿️", color: "bg-amber-300" },
+      { id: 27, name: "光る流れ星", emoji: "🌟", color: "bg-yellow-100" },
+      { id: 28, name: "きらきら魔法", emoji: "✨", color: "bg-yellow-50" },
+      { id: 29, name: "ぽかぽか太陽", emoji: "☀️", color: "bg-orange-50" },
+      { id: 30, name: "ふんわり雲", emoji: "☁️", color: "bg-blue-50" }
+    ];
+
+    const COUNTRIES = [
+      { en: "the U.S.A.", ja: "アメリカ" },
+      { en: "Australia", ja: "オーストラリア" },
+      { en: "Brazil", ja: "ブラジル" },
+      { en: "Canada", ja: "カナダ" },
+      { en: "China", ja: "中国" },
+      { en: "Egypt", ja: "エジプト" },
+      { en: "France", ja: "フランス" },
+      { en: "Germany", ja: "ドイツ" },
+      { en: "India", ja: "インド" },
+      { en: "Italy", ja: "イタリア" },
+      { en: "Japan", ja: "日本" },
+      { en: "Kenya", ja: "ケニア" },
+      { en: "Korea", ja: "韓国" },
+      { en: "Malaysia", ja: "マレーシア" },
+      { en: "Mexico", ja: "メキシコ" },
+      { en: "the Netherlands", ja: "オランダ" },
+      { en: "New Zealand", ja: "ニュージーランド" },
+      { en: "Peru", ja: "ペルー" },
+      { en: "Russia", ja: "ロシア" },
+      { en: "Singapore", ja: "シンガポール" },
+      { en: "Spain", ja: "スペイン" },
+      { en: "Sweden", ja: "スウェーデン" },
+      { en: "Finland", ja: "フィンランド" },
+      { en: "Thailand", ja: "タイ" },
+      { en: "the U.K.", ja: "イギリス" },
+      { en: "Turkey", ja: "トルコ" },
+      { en: "Vietnam", ja: "ベトナム" }
+    ];
+
+    const DISHES = [
+      "タケノコとサツマイモの ホクホクおみそしる",
+      "サツマイモの タケノコあんかけ",
+      "秋の あまから きんぴら",
+      "タケノコと サツマイモの 炊き込みごはん",
+      "もっちり サツマイモと タケノコの 天ぷら",
+      "タケノコ入り サツマイモ コロッケ",
+      "サツマイモと タケノコの チーズ焼き",
+      "タケノコと サツマイモの カレー",
+      "サツマイモと タケノコの バターしょうゆ炒め",
+      "魔法の ぜっぴん スイートポテト・タケノコぞえ"
+    ];
+
+    // --- ミニゲームコンポーネント ---
+    function MiniGame({ monsters, onFinish }) {
+      const [timeLeft, setTimeLeft] = useState(10);
+      const [coins, setCoins] = useState(0);
+      
+      const initialPositions = useMemo(() => {
+        return monsters.map((m) => ({
+          id: m.id,
+          emoji: m.emoji,
+          x: 50 + (Math.random() * 40 - 20),
+          y: 50 + (Math.random() * 40 - 20)
+        }));
+      }, [monsters]);
+
+      const [playerPositions, setPlayerPositions] = useState(initialPositions);
+      const [coinPos, setCoinPos] = useState({x: Math.random() * 80 + 10, y: Math.random() * 80 + 10});
+      
+      const playersRef = useRef(initialPositions);
+      const coinRef = useRef({x: coinPos.x, y: coinPos.y});
+      const keysRef = useRef({ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false});
+      const requestRef = useRef();
+      const isFinished = useRef(false);
+
+      useEffect(() => {
+        const timer = setInterval(() => {
+          setTimeLeft(prev => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        return () => clearInterval(timer);
+      }, []);
+
+      useEffect(() => {
+        if (timeLeft === 0 && !isFinished.current) {
+          isFinished.current = true;
+          cancelAnimationFrame(requestRef.current);
+          onFinish(coins);
+        }
+      }, [timeLeft, coins, onFinish]);
+
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if (keysRef.current.hasOwnProperty(e.key)) {
+            keysRef.current[e.key] = true;
+            e.preventDefault();
+          }
+        };
+        const handleKeyUp = (e) => {
+          if (keysRef.current.hasOwnProperty(e.key)) {
+            keysRef.current[e.key] = false;
+            e.preventDefault();
+          }
+        };
+        window.addEventListener('keydown', handleKeyDown, {passive: false});
+        window.addEventListener('keyup', handleKeyUp);
+        return () => {
+          window.removeEventListener('keydown', handleKeyDown);
+          window.removeEventListener('keyup', handleKeyUp);
+        };
+      }, []);
+
+      useEffect(() => {
+        const updateGame = () => {
+          if (timeLeft <= 0) return;
+
+          const speed = 1.5;
+          let dx = 0;
+          let dy = 0;
+
+          if (keysRef.current.ArrowUp) dy -= speed;
+          if (keysRef.current.ArrowDown) dy += speed;
+          if (keysRef.current.ArrowLeft) dx -= speed;
+          if (keysRef.current.ArrowRight) dx += speed;
+
+          const newPositions = playersRef.current.map(p => {
+            let px = p.x + dx;
+            let py = p.y + dy;
+            px = Math.max(5, Math.min(95, px));
+            py = Math.max(5, Math.min(95, py));
+            return { ...p, x: px, y: py };
+          });
+
+          playersRef.current = newPositions;
+          setPlayerPositions(newPositions);
+
+          const cx = coinRef.current.x;
+          const cy = coinRef.current.y;
+          const hit = newPositions.some(p => Math.hypot(p.x - cx, p.y - cy) < 12);
+          
+          if (hit) { 
+            setCoins(c => c + 1);
+            coinRef.current = {
+              x: Math.random() * 80 + 10,
+              y: Math.random() * 80 + 10
+            };
+            setCoinPos({...coinRef.current});
+          }
+
+          requestRef.current = requestAnimationFrame(updateGame);
+        };
+        requestRef.current = requestAnimationFrame(updateGame);
+        return () => cancelAnimationFrame(requestRef.current);
+      }, [timeLeft]);
+
+      const handlePointer = (dir, isDown) => {
+        keysRef.current[dir] = isDown;
+      };
+
+      return (
+        <div className="min-h-screen bg-green-50 p-4 md:p-8 flex flex-col items-center justify-center">
+          <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl p-4 md:p-8 border-4 border-green-200">
+            <h2 className="text-2xl font-bold text-center text-green-700 mb-4">コインをあつめよう！</h2>
+            <div className="flex justify-between items-center mb-4 px-2">
+              <div className="text-2xl font-bold text-gray-700">⏳ {timeLeft}びょう</div>
+              <div className="text-2xl font-bold text-yellow-500">🪙 {coins} コイン</div>
+            </div>
+            
+            <div className="relative w-full h-80 bg-green-100 rounded-xl overflow-hidden border-2 border-green-300">
+              {playerPositions.map((p, index) => (
+                <div 
+                  key={p.id + '-' + index}
+                  className="absolute text-5xl transform -translate-x-1/2 -translate-y-1/2 drop-shadow-md z-10"
+                  style={{ left: `${p.x}%`, top: `${p.y}%` }}
+                >
+                  {p.emoji}
+                </div>
+              ))}
+              <div 
+                className="absolute text-4xl transform -translate-x-1/2 -translate-y-1/2 drop-shadow-md animate-bounce"
+                style={{ left: `${coinPos.x}%`, top: `${coinPos.y}%` }}
+              >
+                🪙
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 w-48 mx-auto mt-6 touch-none">
+              <div />
+              <button 
+                className="bg-gray-200 active:bg-gray-400 p-4 rounded-xl text-2xl shadow select-none flex items-center justify-center"
+                onPointerDown={() => handlePointer('ArrowUp', true)}
+                onPointerUp={() => handlePointer('ArrowUp', false)}
+                onPointerLeave={() => handlePointer('ArrowUp', false)}
+              >⬆️</button>
+              <div />
+              <button 
+                className="bg-gray-200 active:bg-gray-400 p-4 rounded-xl text-2xl shadow select-none flex items-center justify-center"
+                onPointerDown={() => handlePointer('ArrowLeft', true)}
+                onPointerUp={() => handlePointer('ArrowLeft', false)}
+                onPointerLeave={() => handlePointer('ArrowLeft', false)}
+              >⬅️</button>
+              <button 
+                className="bg-gray-200 active:bg-gray-400 p-4 rounded-xl text-2xl shadow select-none flex items-center justify-center"
+                onPointerDown={() => handlePointer('ArrowDown', true)}
+                onPointerUp={() => handlePointer('ArrowDown', false)}
+                onPointerLeave={() => handlePointer('ArrowDown', false)}
+              >⬇️</button>
+              <button 
+                className="bg-gray-200 active:bg-gray-400 p-4 rounded-xl text-2xl shadow select-none flex items-center justify-center"
+                onPointerDown={() => handlePointer('ArrowRight', true)}
+                onPointerUp={() => handlePointer('ArrowRight', false)}
+                onPointerLeave={() => handlePointer('ArrowRight', false)}
+              >➡️</button>
+            </div>
+            
+            <p className="text-center text-gray-500 mt-4 text-sm font-bold">じゅうじキーでも うごかせるよ</p>
+          </div>
+        </div>
+      );
+    }
+
+    // --- ボーナスゲームコンポーネント ---
+    function BonusGame({ onFinish, speak }) {
+      const [timeLeft, setTimeLeft] = useState(20);
+      const [coins, setCoins] = useState(0);
+      const [currentQuiz, setCurrentQuiz] = useState(null);
+      const [isCorrectEffect, setIsCorrectEffect] = useState(false);
+      const [isWrongEffect, setIsWrongEffect] = useState(false);
+      
+      const generateQuestion = useCallback(() => {
+        const shuffled = [...COUNTRIES].sort(() => 0.5 - Math.random());
+        const answer = shuffled[0];
+        const options = shuffled.slice(0, 4).sort(() => 0.5 - Math.random());
+        setCurrentQuiz({ answer, options });
+        setTimeout(() => speak(answer.en), 100); // 問題が出たら自動で読み上げる
+      }, [speak]);
+
+      useEffect(() => {
+        generateQuestion();
+      }, [generateQuestion]);
+
+      useEffect(() => {
+        const timer = setInterval(() => {
+          setTimeLeft(prev => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        return () => clearInterval(timer);
+      }, []);
+
+      useEffect(() => {
+        if (timeLeft === 0) {
+          onFinish(coins);
+        }
+      }, [timeLeft, coins, onFinish]);
+
+      const handleAnswer = (option) => {
+        if (option.ja === currentQuiz.answer.ja) {
+          // 正解
+          setCoins(c => c + 1);
+          setIsCorrectEffect(true);
+          setTimeout(() => {
+            setIsCorrectEffect(false);
+            generateQuestion();
+          }, 400);
+        } else {
+          // 不正解
+          setIsWrongEffect(true);
+          setTimeout(() => setIsWrongEffect(false), 400);
+        }
+      };
+
+      if (!currentQuiz) return null;
+
+      return (
+        <div className="min-h-screen bg-pink-50 p-4 md:p-8 flex flex-col items-center justify-center">
+          <div className={`max-w-lg w-full bg-white rounded-3xl shadow-xl p-6 md:p-8 border-4 border-pink-200 relative transition-transform ${isWrongEffect ? 'animate-shake' : ''}`}>
+            {isCorrectEffect && (
+              <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                <span className="text-9xl animate-bounce-in drop-shadow-xl font-bold">⭕</span>
+              </div>
+            )}
+            {isWrongEffect && (
+              <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                <span className="text-9xl animate-bounce-in drop-shadow-xl font-bold">❌</span>
+              </div>
+            )}
+
+            <h2 className="text-2xl font-bold text-center text-pink-700 mb-4">ボーナスタイム！ 4たくクイズ</h2>
+            <div className="flex justify-between items-center mb-6 px-2">
+              <div className="text-2xl font-bold text-gray-700">⏳ {timeLeft}びょう</div>
+              <div className="text-2xl font-bold text-yellow-500">🪙 {coins} コイン</div>
+            </div>
+            
+            <div className="bg-pink-100 p-8 rounded-2xl mb-8 text-center shadow-inner relative">
+              <button onClick={() => speak(currentQuiz.answer.en)} className="absolute top-2 right-2 text-pink-600 bg-white p-2 rounded-full shadow-sm text-xl active:scale-95">🔊</button>
+              <p className="text-4xl md:text-5xl font-bold text-pink-800 leading-tight">{currentQuiz.answer.en}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 touch-manipulation">
+              {currentQuiz.options.map((opt, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleAnswer(opt)}
+                  className="bg-white border-4 border-pink-100 hover:border-pink-300 hover:bg-pink-50 text-gray-800 font-bold py-6 px-2 rounded-2xl text-lg md:text-xl shadow-md transition transform active:scale-95 break-words"
+                >
+                  {opt.ja}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- メインアプリ ---
+    function App() {
+      const [step, setStep] = useState('HOME'); 
+      const [playCount, setPlayCount] = useState(0);
+      const [collections, setCollections] = useState([]);
+      const [totalCoins, setTotalCoins] = useState(0);
+      const [items, setItems] = useState({ takenoko: 0, satsumaimo: 0 });
+      const [cookedDishes, setCookedDishes] = useState([]);
+      
+      const [practiceQueue, setPracticeQueue] = useState([]);
+      const [currentPracticeIndex, setCurrentPracticeIndex] = useState(0);
+      
+      const [failCount, setFailCount] = useState(0);
+      const [isListening, setIsListening] = useState(false);
+      const [feedbackMsg, setFeedbackMsg] = useState("");
+      
+      const [currentGachaMonster, setCurrentGachaMonster] = useState(null);
+      const [isRolling, setIsRolling] = useState(false);
+      const [rollEmoji, setRollEmoji] = useState("🎁");
+      const [lastEarnedCoins, setLastEarnedCoins] = useState(0);
+      const [bonusEarnedCoins, setBonusEarnedCoins] = useState(0);
+
+      const [purchaseEffect, setPurchaseEffect] = useState(null);
+      const [cookEffect, setCookEffect] = useState(null);
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const synth = window.speechSynthesis;
+
+      useEffect(() => {
+        const savedCount = localStorage.getItem('englishAppPlayCountV2');
+        if (savedCount) setPlayCount(parseInt(savedCount, 10));
+        const savedCollections = localStorage.getItem('englishAppCollectionsV2');
+        if (savedCollections) setCollections(JSON.parse(savedCollections));
+        const savedCoins = localStorage.getItem('englishAppCoinsV2');
+        if (savedCoins) setTotalCoins(parseInt(savedCoins, 10));
+        const savedItems = localStorage.getItem('englishAppItemsV2');
+        if (savedItems) setItems(JSON.parse(savedItems));
+        const savedDishes = localStorage.getItem('englishAppDishesV2');
+        if (savedDishes) setCookedDishes(JSON.parse(savedDishes));
+      }, []);
+
+      const saveData = (newCount, newCollections, newCoins, newItems, newDishes) => {
+        localStorage.setItem('englishAppPlayCountV2', newCount.toString());
+        localStorage.setItem('englishAppCollectionsV2', JSON.stringify(newCollections));
+        localStorage.setItem('englishAppCoinsV2', newCoins.toString());
+        if(newItems) localStorage.setItem('englishAppItemsV2', JSON.stringify(newItems));
+        if(newDishes) localStorage.setItem('englishAppDishesV2', JSON.stringify(newDishes));
+        
+        setPlayCount(newCount);
+        setCollections(newCollections);
+        setTotalCoins(newCoins);
+        if(newItems) setItems(newItems);
+        if(newDishes) setCookedDishes(newDishes);
+      };
+
+      const startApp = () => {
+        // 3つの単語をランダムに選ぶ
+        const shuffled = [...COUNTRIES].sort(() => 0.5 - Math.random());
+        setPracticeQueue(shuffled.slice(0, 3));
+        setCurrentPracticeIndex(0);
+        setFailCount(0);
+        setStep('PRACTICE');
+      };
+
+      const buyItem = (itemType, cost) => {
+        if (totalCoins >= cost) {
+          const newCoins = totalCoins - cost;
+          const newItems = { ...items, [itemType]: items[itemType] + 1 };
+          saveData(playCount, collections, newCoins, newItems, cookedDishes);
+          
+          setPurchaseEffect(itemType);
+          setTimeout(() => setPurchaseEffect(null), 1500);
+        } else {
+          alert("コインがたりないよ！ミニゲームであつめてね。");
+        }
+      };
+
+      const cookDish = () => {
+        if (items.takenoko >= 1 && items.satsumaimo >= 1) {
+          const newItems = { takenoko: items.takenoko - 1, satsumaimo: items.satsumaimo - 1 };
+          setItems(newItems);
+          saveData(playCount, collections, totalCoins, newItems, cookedDishes);
+
+          setCookEffect('cooking');
+          setTimeout(() => {
+            const unownedDishes = DISHES.filter(d => !cookedDishes.includes(d));
+            const newDish = unownedDishes.length > 0 ? unownedDishes[Math.floor(Math.random() * unownedDishes.length)] : DISHES[Math.floor(Math.random() * DISHES.length)];
+            
+            setCookEffect(newDish);
+            
+            if (!cookedDishes.includes(newDish)) {
+              const newDishes = [...cookedDishes, newDish];
+              setCookedDishes(newDishes);
+              saveData(playCount, collections, totalCoins, newItems, newDishes);
+            }
+          }, 2000);
+        }
+      };
+
+      const handleBack = () => {
+        setFailCount(0);
+        setFeedbackMsg("");
+        setIsListening(false);
+        
+        if (step === 'PRACTICE') {
+          setStep('HOME');
+        }
+      };
+
+      const BackButton = () => (
+        <button onClick={handleBack} className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-gray-700 font-bold py-2 px-4 rounded-full shadow-md hover:bg-gray-100 flex items-center z-20 border-2 border-gray-200">
+          <span className="mr-1">◀</span> もどる
+        </button>
+      );
+
+      const speak = useCallback((text, rate = 0.9) => {
+        if (synth.speaking) synth.cancel();
+        const utterThis = new SpeechSynthesisUtterance(text);
+        utterThis.lang = 'en-US';
+        utterThis.rate = rate; 
+        const voices = synth.getVoices();
+        const englishVoice = voices.find(v => v.lang.includes('en-US') && v.name.includes('Female')) || voices.find(v => v.lang.includes('en-US'));
+        if (englishVoice) utterThis.voice = englishVoice;
+        synth.speak(utterThis);
+      }, [synth]);
+
+      const startListening = () => {
+        if (!SpeechRecognition) {
+          alert("お使いのブラウザは音声入力に対応していません。スキップして進んでください。");
+          setFailCount(2); 
+          return;
+        }
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        setIsListening(true);
+        setFeedbackMsg("");
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          checkPronunciation(transcript);
+        };
+        recognition.onerror = () => {
+          setIsListening(false);
+          handleFail();
+        };
+        recognition.onend = () => setIsListening(false);
+        recognition.start();
+      };
+
+      const handleFail = () => {
+        setFailCount(prev => prev + 1);
+        setFeedbackMsg("おしい！もういちどチャレンジ！\nマイクの場所はどこか確認をしよう。\n分からない人は先生を呼ぼう。\n自分の声がうまく入らない場合はイヤホンをとってやってみよう。");
+      };
+
+      const checkPronunciation = (transcript) => {
+        let isCorrect = false;
+        const currentCountry = practiceQueue[currentPracticeIndex];
+        const targetEn = currentCountry.en.toLowerCase().replace(/[\.\s]/g, '');
+        const spoken = transcript.toLowerCase().replace(/[\.\s]/g, '');
+
+        // 柔軟な判定ロジック
+        if (spoken.includes(targetEn) || (targetEn.includes(spoken) && spoken.length > 3)) {
+          isCorrect = true;
+        } else if (currentCountry.en === "the U.S.A." && (spoken.includes("usa") || spoken.includes("us") || spoken.includes("america"))) {
+          isCorrect = true;
+        } else if (currentCountry.en === "the U.K." && (spoken.includes("uk") || spoken.includes("unitedkingdom") || spoken.includes("britain"))) {
+          isCorrect = true;
+        } else if (currentCountry.en === "the Netherlands" && spoken.includes("netherlands")) {
+          isCorrect = true;
+        } else if (currentCountry.en === "New Zealand" && spoken.includes("zealand")) {
+          isCorrect = true;
+        }
+
+        if (isCorrect) {
+          setFeedbackMsg("Excellent! 👏");
+          setTimeout(() => speak("Excellent!"), 500);
+          setTimeout(() => proceedToNext(), 2000);
+        } else {
+          handleFail();
+        }
+      };
+
+      const proceedToNext = () => {
+        setFailCount(0);
+        setFeedbackMsg("");
+        
+        if (currentPracticeIndex + 1 < practiceQueue.length) {
+          setCurrentPracticeIndex(prev => prev + 1);
+        } else {
+          setStep('GACHA');
+        }
+      };
+
+      const rollGacha = () => {
+        setIsRolling(true);
+        const intervalId = setInterval(() => {
+          setRollEmoji(MONSTERS[Math.floor(Math.random() * MONSTERS.length)].emoji);
+        }, 100);
+
+        const ownedIds = collections.map(c => c.id);
+        const unowned = MONSTERS.filter(m => !ownedIds.includes(m.id));
+        const newMonster = unowned.length > 0 ? unowned[Math.floor(Math.random() * unowned.length)] : MONSTERS[Math.floor(Math.random() * MONSTERS.length)];
+
+        setTimeout(() => {
+          clearInterval(intervalId);
+          setIsRolling(false);
+          setCurrentGachaMonster(newMonster);
+          if (!ownedIds.includes(newMonster.id)) {
+            saveData(playCount + 1, [...collections, newMonster], totalCoins, items, cookedDishes);
+          } else {
+            saveData(playCount + 1, collections, totalCoins, items, cookedDishes);
+          }
+        }, 2500);
+      };
+
+      const renderHeader = (title) => (
+        <div className="bg-blue-500 text-white p-4 rounded-t-2xl flex items-center justify-center font-bold text-xl mb-4 shadow-md">
+          {title}
+        </div>
+      );
+
+      // UI レンダリングブロック
+      let content = null;
+
+      if (step === 'HOME') {
+        content = (
+          <div className="min-h-screen p-4 md:p-8 flex flex-col justify-center relative bg-blue-50 pb-20">
+            {/* 料理演出 */}
+            {cookEffect && (
+              <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+                  {cookEffect === 'cooking' ? (
+                    <div className="animate-pulse">
+                      <div className="text-8xl mb-4">🍲</div>
+                      <p className="text-2xl font-bold text-orange-600">おなべで<br/>おりょうり中...</p>
+                    </div>
+                  ) : (
+                    <div className="animate-fade-in-up">
+                      <div className="text-8xl mb-4">✨🍽️✨</div>
+                      <p className="text-gray-500 font-bold mb-2 text-lg">かんせい！</p>
+                      <p className="text-2xl font-bold text-orange-700 mb-8 border-b-2 border-orange-200 pb-4">{cookEffect}</p>
+                      <button onClick={() => setCookEffect(null)} className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transform transition hover:scale-105">おいしそう！</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 購入演出 */}
+            {purchaseEffect && (
+              <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-50">
+                <div className="animate-bounce-in text-9xl drop-shadow-2xl">
+                  {purchaseEffect === 'takenoko' ? '🎋' : '🍠'}
+                </div>
+              </div>
+            )}
+
+            <div className="absolute top-4 right-4 bg-yellow-400 text-yellow-900 font-bold px-6 py-2 rounded-full border-4 border-yellow-200 shadow-lg text-xl z-10 flex gap-4">
+              <span>🪙 {totalCoins}</span>
+              <span>🎋 {items.takenoko || 0}</span>
+              <span>🍠 {items.satsumaimo || 0}</span>
+            </div>
+            
+            <div className="max-w-2xl w-full mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border-4 border-blue-200 mt-12">
+              <div className="bg-gradient-to-r from-blue-400 to-indigo-500 p-8 text-center text-white">
+                <h1 className="text-3xl md:text-4xl font-extrabold mb-4 drop-shadow-md">えいごで はなそう！</h1>
+                <p className="text-lg bg-white/20 inline-block px-4 py-2 rounded-full font-medium mb-2">🎧 イヤホンを つけましょう 🎧</p>
+                <p className="text-sm font-bold opacity-90">じぶんの 声が うまく 入らない ときは、<br/>イヤホンを とって やってみよう！</p>
+              </div>
+              
+              <div className="p-8 text-center">
+                {playCount > 0 && (
+                  <div className="mb-6 bg-orange-100 p-4 rounded-xl border-2 border-orange-200 animate-pulse">
+                    <p className="text-orange-700 font-bold">ゲームで コインを あつめて、たくさん<br/>タケノコや さつまいもを ゲットしよう！</p>
+                  </div>
+                )}
+
+                <button 
+                  onClick={startApp}
+                  className="bg-red-500 hover:bg-red-600 text-white text-2xl font-bold py-4 px-12 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95 mx-auto mb-8 flex items-center"
+                >
+                  <span className="mr-2 text-2xl">▶️</span> れんしゅう スタート！
+                </button>
+
+                {playCount > 0 && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <div className="bg-green-50 p-4 rounded-2xl border-2 border-green-200 relative overflow-hidden">
+                        <h3 className="font-bold text-green-700 mb-2">🎋 タケノコをかう (10🪙)</h3>
+                        <button onClick={() => buyItem('takenoko', 10)} className="bg-green-500 text-white px-4 py-2 rounded-full font-bold shadow hover:bg-green-600 active:scale-95 relative z-10">かう！</button>
+                      </div>
+                      <div className="bg-purple-50 p-4 rounded-2xl border-2 border-purple-200 relative overflow-hidden">
+                        <h3 className="font-bold text-purple-700 mb-2">🍠 さつまいもをかう (10🪙)</h3>
+                        <button onClick={() => buyItem('satsumaimo', 10)} className="bg-purple-500 text-white px-4 py-2 rounded-full font-bold shadow hover:bg-purple-600 active:scale-95 relative z-10">かう！</button>
+                      </div>
+                    </div>
+
+                    <div className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-200 mb-8">
+                      <h3 className="font-bold text-orange-800 mb-2 text-lg">👨‍🍳 おみせで お料理をつくる</h3>
+                      <p className="text-sm text-orange-700 font-bold mb-3">タケノコと サツマイモが １こずつ ひつようだよ！</p>
+                      <button 
+                        onClick={cookDish} 
+                        disabled={items.takenoko < 1 || items.satsumaimo < 1}
+                        className={`text-white px-6 py-3 rounded-full font-bold shadow text-lg flex items-center justify-center mx-auto transition ${items.takenoko >= 1 && items.satsumaimo >= 1 ? 'bg-orange-500 hover:bg-orange-600 transform hover:scale-105' : 'bg-gray-400 opacity-70 cursor-not-allowed'}`}
+                      >
+                        <span className="mr-2">🍳</span>おりょうりする！
+                      </button>
+                      
+                      {cookedDishes.length > 0 && (
+                        <div className="mt-6 text-left border-t-2 border-orange-200 pt-4">
+                          <p className="font-bold text-orange-800 mb-2">✨ つくった お料理 ({cookedDishes.length}/10)</p>
+                          <ul className="list-disc pl-5 text-sm text-gray-700 font-bold space-y-1">
+                            {cookedDishes.map((dish, i) => <li key={i}>{dish}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-yellow-50 rounded-2xl p-6 border-2 border-yellow-200">
+                      <h2 className="text-xl font-bold text-yellow-700 mb-4">⭐ あつめたモンスター ({collections.length}/30)</h2>
+                      <div className="grid grid-cols-5 gap-2 md:gap-4">
+                        {collections.map(m => (
+                          <div key={m.id} className={`${m.color} p-2 rounded-xl text-center shadow-sm text-2xl relative group cursor-default`} title={m.name}>
+                            {m.emoji}
+                            <div className="absolute hidden group-hover:block bg-black text-white text-xs p-1 rounded -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap z-10">{m.name}</div>
+                          </div>
+                        ))}
+                        {Array.from({ length: 30 - collections.length }).map((_, i) => (
+                          <div key={`empty-${i}`} className="bg-gray-100 p-2 rounded-xl text-center border-2 border-dashed border-gray-300 text-2xl opacity-50">❓</div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      } else if (step === 'PRACTICE') {
+        const currentCountry = practiceQueue[currentPracticeIndex];
+        content = (
+          <div className="min-h-screen bg-pink-50 p-4 flex items-center justify-center relative">
+            <BackButton />
+            <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl p-8 border-4 border-pink-200 text-center mt-12">
+              {renderHeader(`えいごで いってみよう！ (${currentPracticeIndex + 1}/${practiceQueue.length})`)}
+              <div className="bg-pink-100 p-6 rounded-2xl mb-6">
+                <p className="text-3xl md:text-4xl font-bold text-pink-700 mb-2 leading-relaxed">{currentCountry.en}</p>
+                <p className="text-lg font-bold text-gray-600 mb-4">（{currentCountry.ja}）</p>
+                <button onClick={() => speak(currentCountry.en)} className="mx-auto text-pink-600 bg-white px-4 py-2 rounded-full shadow-sm mt-4 flex items-center"><span className="mr-2">🔊</span>おてほんをきく</button>
+              </div>
+              <div className="mb-8">
+                <button onClick={startListening} disabled={isListening} className={`p-6 rounded-full shadow-lg ${isListening ? 'bg-red-500 animate-pulse' : 'bg-blue-500'} text-white mx-auto text-4xl`}>🎤</button>
+                <p className="mt-4 text-gray-600 font-bold">{isListening ? "はなしてください..." : "マイクをおして はなす"}</p>
+                
+                {feedbackMsg && (
+                  <div className={`mt-6 text-xl md:text-2xl font-black ${feedbackMsg.includes('Excellent') ? 'text-green-600 border-green-400 bg-green-50' : 'text-red-600 border-red-400 bg-red-50'} p-6 rounded-2xl border-4 text-left leading-relaxed shadow-lg whitespace-pre-line`}>
+                    {feedbackMsg}
+                  </div>
+                )}
+              </div>
+              {failCount >= 2 && <button onClick={proceedToNext} className="bg-gray-300 hover:bg-gray-400 py-3 px-6 rounded-xl font-bold mx-auto">⏭️ むずかしいので スキップ</button>}
+            </div>
+          </div>
+        );
+      } else if (step === 'GACHA') {
+        content = (
+          <div className="min-h-screen bg-indigo-900 p-4 flex items-center justify-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-50 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-700 via-indigo-900 to-black"></div>
+            <div className="max-w-lg w-full bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 text-center relative z-10 border border-white/20">
+              <h2 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-500 mb-8">おたのしみ ガチャ！</h2>
+              {!currentGachaMonster ? (
+                <div className="mb-12">
+                  {isRolling ? (
+                    <div className="flex flex-col items-center justify-center">
+                      <p className="text-yellow-300 font-bold text-2xl mb-8 animate-pulse">なにがでるかな...？</p>
+                      <div className="w-48 h-48 mx-auto bg-white rounded-full flex items-center justify-center mb-8 border-4 border-yellow-300 scale-110">
+                        <span className="text-8xl">{rollEmoji}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-48 h-48 mx-auto bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center animate-bounce mb-8">
+                        <span className="text-7xl">🎁</span>
+                      </div>
+                      <button onClick={rollGacha} className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-3xl font-black py-5 px-12 rounded-full border-4 border-yellow-200 shadow-2xl hover:scale-105 transform transition">ガチャを まわす！</button>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="mb-8 animate-fade-in-up">
+                  <p className="text-yellow-300 font-bold text-xl mb-4">ゲットした モンスターは…</p>
+                  <div className={`${currentGachaMonster.color} w-64 h-64 mx-auto rounded-full flex items-center justify-center mb-6 border-8 border-white shadow-xl`}>
+                    <span className="text-8xl mb-2">{currentGachaMonster.emoji}</span>
+                  </div>
+                  <h3 className="text-4xl font-extrabold text-white mb-8 drop-shadow">{currentGachaMonster.name}</h3>
+                  <button onClick={() => setStep('MINIGAME_INTRO')} className="bg-yellow-500 hover:bg-yellow-600 text-white text-2xl font-bold py-4 px-8 rounded-full shadow-lg w-full transform transition hover:scale-105">つぎへ！</button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      } else if (step === 'MINIGAME_INTRO') {
+        content = (
+          <div className="min-h-screen bg-green-50 p-4 flex items-center justify-center relative">
+            <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl p-8 text-center border-4 border-green-200">
+              <h2 className="text-3xl font-bold text-green-600 mb-6">コインあつめ ゲーム！</h2>
+              <div className="bg-green-100 p-6 rounded-2xl mb-8">
+                <div className="text-6xl mb-4">🪙🏃‍♂️</div>
+                <p className="text-lg font-bold text-gray-700 leading-relaxed text-left">
+                  キーボードの <span className="bg-white px-2 py-1 rounded shadow-sm border">↑</span> <span className="bg-white px-2 py-1 rounded shadow-sm border">↓</span> <span className="bg-white px-2 py-1 rounded shadow-sm border">←</span> <span className="bg-white px-2 py-1 rounded shadow-sm border">→</span> や、<br/>
+                  がめんの ボタンを おして<br/>
+                  モンスターを うごかそう！<br/>
+                  <br/>
+                  せいげんじかん 内に、<br/>
+                  コイン（🪙）を たくさん あつめてね！
+                </p>
+              </div>
+              <button onClick={() => setStep('MINIGAME')} className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-12 rounded-full text-2xl shadow-md w-full">スタート！</button>
+            </div>
+          </div>
+        );
+      } else if (step === 'MINIGAME') {
+        const gameMonsters = collections.length > 0 ? collections : (currentGachaMonster ? [currentGachaMonster] : []);
+        content = (
+          <MiniGame monsters={gameMonsters} onFinish={(coins) => {
+            setLastEarnedCoins(coins);
+            setStep('BONUS_INTRO');
+          }} />
+        );
+      } else if (step === 'BONUS_INTRO') {
+        content = (
+          <div className="min-h-screen bg-pink-50 p-4 flex items-center justify-center relative">
+            <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl p-8 text-center border-4 border-pink-200">
+              <h2 className="text-3xl font-bold text-pink-600 mb-6">ボーナスタイム！</h2>
+              <div className="bg-pink-100 p-6 rounded-2xl mb-8">
+                <div className="text-6xl mb-4">🎯🪙</div>
+                <p className="text-lg font-bold text-gray-700 leading-relaxed text-left">
+                  えいごの「国名」が よみあげられるよ。<br/>
+                  正しい 日本語を えらんでね！<br/>
+                  <br/>
+                  せいげんじかんは 20びょう！<br/>
+                  せいかいした ぶんだけ<br/>
+                  ボーナスコインが もらえるよ！
+                </p>
+              </div>
+              <button onClick={() => setStep('BONUS_GAME')} className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-12 rounded-full text-2xl shadow-md w-full transition transform hover:scale-105">スタート！</button>
+            </div>
+          </div>
+        );
+      } else if (step === 'BONUS_GAME') {
+        content = (
+          <BonusGame 
+            speak={speak} 
+            onFinish={(bonusCoins) => {
+              setBonusEarnedCoins(bonusCoins);
+              const newTotal = totalCoins + lastEarnedCoins + bonusCoins;
+              saveData(playCount, collections, newTotal, items, cookedDishes);
+              setStep('RESULT');
+            }} 
+          />
+        );
+      } else if (step === 'RESULT') {
+        content = (
+          <div className="min-h-screen bg-yellow-50 p-4 flex items-center justify-center relative">
+            <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl p-8 border-4 border-yellow-200 text-center animate-fade-in-up">
+              <h2 className="text-3xl font-bold text-yellow-600 mb-6">ゲーム おつかれさま！</h2>
+              <div className="text-6xl mb-6">🎉</div>
+              
+              <div className="bg-yellow-100 p-6 rounded-2xl mb-6 shadow-inner text-left">
+                <p className="text-xl font-bold text-gray-700 mb-2 flex justify-between border-b-2 border-yellow-200 pb-2">
+                  <span>ゲームのコイン:</span> <span className="text-yellow-600">{lastEarnedCoins} 🪙</span>
+                </p>
+                <p className="text-xl font-bold text-gray-700 mb-4 flex justify-between border-b-2 border-yellow-200 pb-2">
+                  <span>ボーナスのコイン:</span> <span className="text-yellow-600">{bonusEarnedCoins} 🪙</span>
+                </p>
+                <p className="text-2xl font-bold text-gray-800 flex justify-between">
+                  <span>ゲットしたコイン:</span> <span className="text-red-500 text-3xl">{lastEarnedCoins + bonusEarnedCoins} 🪙</span>
+                </p>
+              </div>
+
+              <p className="text-lg font-bold text-gray-500 mb-4">ぜんぶで {totalCoins} コインになったよ！</p>
+              
+              <div className="bg-orange-100 p-4 rounded-xl border-2 border-orange-200 mb-8">
+                <p className="text-orange-700 font-bold text-lg">ホームがめんで コインをつかって<br/>タケノコや さつまいもを かってみよう！</p>
+              </div>
+              
+              <button onClick={() => { setCurrentGachaMonster(null); setStep('HOME'); }} className="bg-blue-500 hover:bg-blue-600 text-white text-xl font-bold py-4 px-8 rounded-full flex items-center justify-center mx-auto shadow-md transform transition hover:scale-105">
+                <span className="mr-2">🏠</span> さいしょに もどる
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen relative font-sans touch-manipulation">
+          {content}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
